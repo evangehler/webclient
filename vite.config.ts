@@ -95,6 +95,20 @@ export default defineConfig({
       include: ['crypto'],
     }),
   ],
+
+
+server: {
+  proxy: {
+    '^/notsettings': 'http://localhost:1980',
+    '^/auth': 'http://localhost:1980',
+    '^/folder': 'http://localhost:1980',
+    '^/stream': 'http://localhost:1980',
+    // and any other backend routes used
+  }
+},
+
+
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
