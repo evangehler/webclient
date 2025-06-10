@@ -11,8 +11,14 @@
             <RepeatOneSvg v-if="settings.repeat == 'one'" />
             <RepeatAllSvg v-else />
         </button>
-        <button title="Shuffle" @click="queue.shuffleQueue">
+        <button
+            title="Toggle Shuffle Mode"
+            :class="{ 'shuffle-enabled': isShuffleMode }"
+            @click="toggleShuffleMode"
+            class="shuffle-button"
+        >
             <ShuffleSvg />
+            <span v-if="isShuffleMode" class="shuffle-dot" />
         </button>
         <HeartSvg
             v-if="!hideHeart"
@@ -36,6 +42,34 @@ import Volume from './Volume.vue'
 
 const queue = useQueue()
 const settings = useSettings()
+
+import { ref, onMounted } from 'vue'
+
+const isShuffleMode = ref(false)
+
+onMounted(() => {
+  fetch('/notsettings')
+    .then(res => res.json())
+    .then(config => {
+      isShuffleMode.value = config.shuffleModeEnabled
+    })
+})
+
+function toggleShuffleMode() {
+  const newValue = !isShuffleMode.value
+  isShuffleMode.value = newValue
+
+  fetch('/notsettings/update', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      key: 'shuffleModeEnabled',
+      value: newValue,
+    }),
+  }).catch(err => {
+    console.error('Failed to update shuffle mode:', err)
+  })
+}
 
 defineProps<{
     hideHeart?: boolean
@@ -90,6 +124,21 @@ defineEmits<{
 
     .heart-button {
         border: solid 1px $gray4 !important;
+    }
+    
+    .shuffle-button {
+    position: relative;
+    }
+
+    .shuffle-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    box-shadow: 0 0 2px #ffffff;
     }
 }
 </style>

@@ -25,6 +25,17 @@ export default defineStore('Queue', {
         manual: true,
     }),
     actions: {
+        async getShuffleMode(): Promise<boolean> {
+        try {
+            const res = await fetch('/notsettings')
+            const json = await res.json()
+            return json.shuffleModeEnabled || false
+        } catch (e) {
+            console.error('Error loading shuffleModeEnabled:', e)
+            return false
+        }
+        },
+
         setPlaying(val: boolean) {
             this.playing = val
         },
@@ -98,8 +109,16 @@ export default defineStore('Queue', {
 
             !is_last ? this.play(this.currentindex + 1, false) : resetQueue()
         },
-        playNext() {
-            this.play(this.nextindex)
+        async playNext() {
+            const shuffleEnabled = await this.getShuffleMode()
+            const { tracklist } = useTracklist()
+
+            if (shuffleEnabled) {
+                const randomIndex = Math.floor(Math.random() * tracklist.length)
+                this.play(randomIndex)
+            } else {
+                this.play(this.nextindex)
+            }
         },
         playPrev() {
             const lyrics = useLyrics()
